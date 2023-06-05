@@ -1,0 +1,111 @@
+#Prerequisites
+#firewall
+#selinux
+#hostname
+#ssh
+
+systemctl stop firewalld
+systemctl disable firewalld
+vim /etc/selinux/config
+	#modify
+	SELINUX=disabled
+#set hostname
+hostnamectl set-hostname [name]
+
+#copy ambari repo file to Documents
+cp [source] [destination]
+cp ambari-2.7.3.0-centos7.tar.gz /root/Documents/
+cp HDP-UTILS-1.1.0.22-centos7.tar.gz /root/Documents/
+
+yum repolist
+yum install -y httpd webserver* createrepo rsync   #rsync in all hosts
+systemctl start httpd
+systemctl enable httpd
+#create ambari directory
+mkdir /var/www/html/ambari
+#copy ambari tar file to newly created directory
+cp [source] /var/www/html/ambari
+#extract tar file
+tar -xvf [file name]
+#copy ambari.repo to yum.repos.d
+cp /var/www/html/ambari/ambari/centos7/2.7.3.0-139/ambari.repo /etc/yum/repos.d/
+createrepo /var/www/html/ambari/ambari/
+vim /etc/yum.repos.d/ambari.repo
+	#add
+	baseurl=http://[hostname]/[ambari_path]     #ambari/ambari/centos7/2.7.3.0-139/
+	gpcheck=0
+yum repolist
+yum install -y ambari-server* ambari-agent*
+vim /etc/hosts
+	#add hosts ip and name
+	192.168.75.45	oxygen-node1
+#send ambari.repo and /etc/hosts file to other hosts
+scp /etc/yum.repos.d/ambari.repo root@oxygen-node1:/etc/yum.repos.d/
+scp /etc/yum.repos.d/ambari.repo root@avanger:/etc/yum.repos.d/
+scp /etc/yum.repos.d/ambari.repo root@xmen:/etc/yum.repos.d/
+rsync /etc/hosts root@oxygen-node1:/etc/hosts
+vim /etc/ambari-agent/conf/ambari-agent.ini
+	#add
+	hostname=oxygen-node1   #hostname
+ambari-server setup -s
+ambari-server start
+ambari-server status
+
+#on browser hit -> hostname:8080 #http://oxygen-node1:8080
+
+yum install -y ntp*
+systemctl start ntpd
+systemctl enable ntpd
+mkdir /var/www/html/hdp
+cp [hdp file source] /var/www/html/hdp/
+createrepo /var/www/html/hdp/
+createrepo /var/www/html/HDP-UTILS
+#now copy utils.repo and hdp.repo to yum.repos.d
+cp [source path] /etc/yum.repos.d/	#hdp.repo
+cp [source path] /etc/yum.repos.d/  #utils.repo
+
+#on browser hit -> hostname:8080 #http://oxygen-node1:8080
+#login with user id and password
+#by Default user id -> admin
+#by Default password -> admin
+#hit Launch
+#Enter your cluster group name like oxygen and hit next
+#select HDP version like (HDP3.1)
+#check in redio button (use local Repository)
+#select OS like
+#Redhat 7 | HDP-3.1 -> http://oxygen-node1/hdp/HDP/centos/3.1.0.0-18
+#Redhat 7 | HDP-UTILS -> http://oxygen-node1/hdp/HDP-UTILS/centos/7.1/.
+#hit next
+#add all host names
+#like - oxygen-node[1-2] or oxygen-node1 oxygen-node2
+#select (perform manual registration)
+#hit registration & confirm
+#check and solve error then hit next
+#choose services 
+#pig, zookeeper, ambari metrix, yarn + map reduce, tez, hive
+#choose file system system
+#HDFC
+#hit processed amyway then hit next
+#no changes in assign master
+#asign slave & client 
+#check all to
+#data node
+#node manager
+#client
+#hit next
+#make passwords in customize services then hit next
+#download mysql
+#select os and install
+#now go to linux terminal 
+rpm -ivh /roo/Downloads/[mysql_file]
+ambari-server setup --jdbc-db=mysql --jdbc-driver=/usr/share/java/mysql-connector-j.jar
+#return to browser
+#no change in Directors
+#no changes in accounts
+#all configuration
+#review and hit Deploy
+
+
+
+
+  
